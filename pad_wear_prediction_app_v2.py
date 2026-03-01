@@ -1,9 +1,67 @@
-# pad_wear_prediction_app_v2.py
+pad_wear_prediction_app_v2.py
 import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 import joblib
+
+# ====================== 新增：背景色+字体大小样式配置 ======================
+def set_page_style():
+    st.markdown(
+        """
+        <style>
+        /* 网页背景色（浅天蓝色渐变） */
+        [data-testid="stAppViewContainer"] {
+            background: linear-gradient(to bottom, #e6f7ff, #f0f8ff);
+        }
+
+        /* 1. 一级标题（大标题）字体大小 */
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            font-size: 32px;  /* 可调整，默认约28px */
+            font-weight: bold;  /* 加粗（可选） */
+        }
+
+        /* 2. 二级标题（子标题）字体大小 */
+        h2, .stSubheader {
+            font-size: 24px;  /* 默认约22px */
+            color: #34495e;
+        }
+
+        /* 3. 普通文本（说明、提示、按钮文字）字体大小 */
+        .stMarkdown, .stText, .stButton>button, .stSelectbox, .stNumberInput {
+            font-size: 16px;  /* 默认约14px，调大更易读 */
+        }
+
+        /* 4. 预测结果（metric指标）字体大小 */
+        .stMetric label {
+            font-size: 18px;  /* 指标标签大小 */
+        }
+        .stMetric value {
+            font-size: 28px;  /* 指标数值大小（核心结果） */
+        }
+        .stMetric delta {
+            font-size: 14px;  /* 误差提示大小 */
+        }
+
+        /* 5. 展开栏/备注文字大小 */
+        .stExpander, .stCaption {
+            font-size: 14px;  /* 次要文字稍小 */
+        }
+
+        /* 按钮样式优化（配合字体） */
+        .stButton>button {
+            background-color: #3498db;
+            color: white;
+            border-radius: 8px;
+            padding: 0.5rem 2rem;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
 
 # ====================== 页面基础设置 ======================
 st.set_page_config(
@@ -14,7 +72,7 @@ st.set_page_config(
 )
 
 st.title("🔧 模塑型自润滑关节轴承衬垫磨损量预测模型")
-st.markdown("### （该预测为在275 MPa载荷、室温环境、自润滑关节轴承摆动25000次时的磨损量）")
+st.markdown("### （该预测为在275 MPa载荷、室温环境、自润滑关节轴承摆动25000次时衬垫的磨损量）")
 st.divider()
 
 # ====================== 1. 模型初始化（适配数字填料含量） ======================
