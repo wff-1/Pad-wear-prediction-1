@@ -1,4 +1,4 @@
-pad_wear_prediction_app_v2.py
+# pad_wear_prediction_app_v2.py
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -62,7 +62,6 @@ def set_page_style():
         unsafe_allow_html=True
     )
 
-
 # ====================== 页面基础设置 ======================
 st.set_page_config(
     page_title="衬垫磨损量预测工具（数字版）",
@@ -70,6 +69,9 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="collapsed"
 )
+
+# 调用样式函数（必须放在最前面）
+set_page_style()
 
 st.title("🔧 模塑型自润滑关节轴承衬垫磨损量预测模型")
 st.markdown("### （该预测为在275 MPa载荷、室温环境、自润滑关节轴承摆动25000次时衬垫的磨损量）")
