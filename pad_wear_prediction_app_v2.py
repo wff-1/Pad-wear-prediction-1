@@ -391,7 +391,7 @@ col_left, col_right = st.columns(2, gap="large")
 
 with col_left:
     # 1. 原始数据查询
-    st.markdown('<div class="func-card query"><div class="func-title">🔍 原始数据查询——查询实验实测数据</div></div>', unsafe_allow_html=True)
+    st.markdown('<div class="func-card query"><div class="func-title">🔍 原始数据查询——查询实测数据</div></div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -406,7 +406,7 @@ with col_left:
             key="query_time"
         )
         query_time_value = query_time_item[1]
-        query_freq = st.selectbox("🔄 工况——测试频率 (Hz)", freq_options, key="query_freq")
+        query_freq = st.selectbox("🔄 测试工况——测试频率 (Hz)", freq_options, key="query_freq")
 
     # 查询按钮
     if st.button("🔍 点击查询原始数据磨损量", type="primary", key="query_btn"):
@@ -430,7 +430,7 @@ with col_right:
         structure_size = st.number_input("⚙️ 结构设计——轴承外圈直径 (cm)", value=25.4, step=0.1, key="pred_size")
     with col4:
         molding_time = st.number_input("⏱️ 成型工艺——固化时间 (h)", value=12.0, step=1.0, key="pred_time")
-        working_frequency = st.number_input("🔄 工况——测试频率 (Hz)", value=0.5, step=0.01, key="pred_freq")
+        working_frequency = st.number_input("🔄 测试工况——测试频率 (Hz)", value=0.5, step=0.01, key="pred_freq")
 
     # 预测按钮
     if st.button("🚀 点击预测磨损量", type="primary", key="pred_btn"):
