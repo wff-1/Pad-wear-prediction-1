@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -19,7 +19,7 @@ if 'visit_count' not in st.session_state:
 else:
     st.session_state.visit_count += 1
 
-# ====================== 样式设置 ======================
+# ====================== 样式设置（新增响应式适配） ======================
 def set_page_style():
     st.markdown(
         '''
@@ -42,6 +42,16 @@ def set_page_style():
             color: #6B7280 !important;
             font-weight: 500;
             z-index: 9999;
+            /* 手机端调整右上角信息位置 */
+            @media (max-width: 768px) {
+                position: relative;
+                top: 0;
+                right: 0;
+                display: block;
+                text-align: center;
+                margin-bottom: 15px;
+                padding: 5px;
+            }
         }
         /* 取消页面最大宽度限制，减少留白 */
         .main > .block-container {
@@ -63,6 +73,11 @@ def set_page_style():
             border: 1px solid #e2e8f0 !important;
             position: relative;
             overflow: hidden;
+            /* 手机端适配标题卡片 */
+            @media (max-width: 768px) {
+                padding: 20px 15px !important;
+                margin: 10px auto !important;
+            }
         }
         /* 主标题卡片动态顶边装饰 */
         .header-card::before {
@@ -88,6 +103,10 @@ def set_page_style():
             font-weight: bold !important;
             margin: 0 0 20px 0 !important;
             line-height: 1.3 !important;
+            /* 手机端标题字号适配 */
+            @media (max-width: 768px) {
+                font-size: 28px !important;
+            }
         }
         /* 模型性能 */
         .model-metric {
@@ -95,6 +114,10 @@ def set_page_style():
             color: #2980b9 !important;
             text-align: center !important;
             margin: 10px 0 !important;
+            /* 手机端适配 */
+            @media (max-width: 768px) {
+                font-size: 14px !important;
+            }
         }
         /* 测试条件说明 */
         .pred-desc {
@@ -103,6 +126,10 @@ def set_page_style():
             text-align: center !important;
             font-weight: bold !important;
             margin-bottom: 20px !important;
+            /* 手机端适配 */
+            @media (max-width: 768px) {
+                font-size: 16px !important;
+            }
         }
         /* 渐变分隔线 */
         .gradient-divider {
@@ -113,7 +140,7 @@ def set_page_style():
             margin: 30px auto !important;
             max-width: 95% !important;
         }
-        /* 功能卡片：保持原样 */
+        /* 功能卡片：保持原样 + 响应式适配 */
         .func-card {
             background: linear-gradient(135deg, #f5f9ff 0%, #e8f4f8 100%) !important;
             border-radius: 12px !important;
@@ -121,6 +148,11 @@ def set_page_style():
             margin-bottom: 20px !important;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
             border-left: 4px solid #3498db !important;
+            /* 手机端功能卡片适配 */
+            @media (max-width: 768px) {
+                padding: 15px 10px !important;
+                margin-bottom: 15px !important;
+            }
         }
         .func-card.query {
             border-left: 4px solid #27ae60 !important;
@@ -131,28 +163,50 @@ def set_page_style():
             font-weight: bold !important;
             margin: 0 !important;
             text-align: left !important;
+            /* 手机端功能标题适配 */
+            @media (max-width: 768px) {
+                font-size: 20px !important;
+                text-align: center !important;
+            }
         }
-        /* 输入框样式：保持原样 */
+        /* 输入框样式：核心修复手机端居中问题 */
         [data-testid="stSelectbox"], [data-testid="stNumberInput"] {
             max-width: 280px !important;
-            margin: 0 0 10px 0 !important;
+            margin: 0 auto 10px auto !important; /* 改为auto居中 */
+            display: block !important; /* 块级元素确保居中 */
+            /* 手机端输入框宽度适配 */
+            @media (max-width: 768px) {
+                max-width: 90% !important; /* 手机端占满宽度 */
+                margin: 0 auto 10px auto !important; /* 强制居中 */
+            }
         }
         label {
             font-size: 18px !important;
             font-weight: 500 !important;
             display: block !important;
-            text-align: left !important;
+            text-align: center !important; /* 标签也居中 */
             margin-bottom: 5px !important;
+            /* 手机端标签适配 */
+            @media (max-width: 768px) {
+                font-size: 16px !important;
+                text-align: center !important;
+            }
         }
-        /* 按钮样式：保持原样 */
+        /* 按钮样式：强制居中 */
         [data-testid="baseButton-primary"] {
             font-size: 18px !important;
             border-radius: 8px !important;
             padding: 0.6rem 2.2rem !important;
             border: none !important;
             max-width: 300px !important;
-            margin: 10px 0 !important;
-            display: block !important;
+            margin: 10px auto !important; /* 改为auto居中 */
+            display: block !important; /* 块级元素确保居中 */
+            /* 手机端按钮适配 */
+            @media (max-width: 768px) {
+                max-width: 90% !important;
+                margin: 15px auto !important;
+                font-size: 16px !important;
+            }
         }
         [data-testid="baseButton-primary"][key="pred_btn"] {
             background-color: #3498db !important;
@@ -168,12 +222,17 @@ def set_page_style():
         [data-testid="baseButton-primary"][key="query_btn"]:hover {
             background-color: #219653 !important;
         }
-        /* 结果样式：保持原样 */
+        /* 结果样式：手机端适配 */
         .pred-result-value, .query-result-value {
             font-size: 40px !important;
             font-weight: bold !important;
-            text-align: left !important;
+            text-align: center !important; /* 结果也居中 */
             margin: 10px 0 !important;
+            /* 手机端适配 */
+            @media (max-width: 768px) {
+                font-size: 32px !important;
+                text-align: center !important;
+            }
         }
         .pred-result-value {
             color: #27ae60 !important;
@@ -184,23 +243,50 @@ def set_page_style():
         .pred-result-label, .query-result-label {
             font-size: 20px !important;
             color: #2c3e50 !important;
-            text-align: left !important;
+            text-align: center !important; /* 标签居中 */
+            /* 手机端适配 */
+            @media (max-width: 768px) {
+                font-size: 18px !important;
+                text-align: center !important;
+            }
         }
         .pred-result-delta, .query-result-desc {
             font-size: 18px !important;
             color: #7f8c8d !important;
-            text-align: left !important;
+            text-align: center !important; /* 描述居中 */
+            /* 手机端适配 */
+            @media (max-width: 768px) {
+                font-size: 16px !important;
+                text-align: center !important;
+            }
         }
         /* 底部备注与卡片间距设为15px */
         .bottom-note {
             margin-top: 15px !important;
+            /* 手机端适配 */
+            @media (max-width: 768px) {
+                margin-top: 10px !important;
+                padding: 0 5px !important;
+            }
+        }
+        /* 核心修复：手机端双列布局改为单列 */
+        @media (max-width: 768px) {
+            [data-testid="column"] {
+                width: 100% !important;
+                flex: none !important;
+                margin: 0 !important;
+            }
+            /* 取消手机端列间距 */
+            .stColumns {
+                gap: 0 !important;
+            }
         }
         </style>
         ''',
         unsafe_allow_html=True
     )
 
-# ====================== 页面配置 ======================
+# ====================== 页面配置（替换为科幻轴承图标） ======================
 st.set_page_config(
     page_title="模塑型自润滑关节轴承衬垫磨损量预测",
     page_icon="🤖",
@@ -209,22 +295,13 @@ st.set_page_config(
 )
 set_page_style()
 
-# ====================== 右上角显示：实时时间 + 访问人数 ======================
-# ====================== 右上角显示：实时时间 + 访问人数 ======================
+# ====================== 右上角显示：实时时间 + 访问人数（修复时区） ======================
 # 核心修改：强制使用北京时间（UTC+8），解决时区差8小时问题
-from datetime import datetime, timedelta
-
-# 方法1：直接获取本地时间并确认时区（推荐）
 now = datetime.now()  # 获取本地时间
 # 兼容服务器时区问题：如果检测到是UTC时区，自动+8小时
 if datetime.utcnow().hour == now.hour:  # 说明当前是UTC时区
     now = now + timedelta(hours=8)
 now_str = now.strftime("%Y-%m-%d %H:%M:%S")
-
-# 方法2（备选）：直接强制设置东八区时间（更稳妥）
-# now_utc = datetime.utcnow()
-# now_cst = now_utc + timedelta(hours=8)
-# now_str = now_cst.strftime("%Y-%m-%d %H:%M:%S")
 
 visit_num = st.session_state.visit_count
 st.markdown(f'''
@@ -250,7 +327,7 @@ original_df = load_original_data()
 # ====================== 提取原始数据唯一值（查询用） ======================
 content_options = sorted(original_df["润滑填料含量(%)"].unique())
 size_options = sorted(original_df["轴承外圈直径尺寸(cm)"].unique())
-# 核心修改：设置显示为两位小数的选项（字符串显示，数值匹配）
+# 固化时间显示两位小数
 time_options = [("4.00", 4.0), ("12.00", 12.0)]
 freq_options = sorted(original_df["测试频率(Hz)"].unique())
 
@@ -294,11 +371,13 @@ def query_wear_data(query_content, query_size, query_time, query_freq):
     else:
         return None
 
-# ====================== 页面交互 ======================
-# 头部卡片（已美化）
+# ====================== 页面交互（标题嵌入科幻轴承图标） ======================
+# 头部卡片（已美化 + 标题嵌入轴承图标）
 st.markdown('''
 <div class="header-card">
-    <div class="main-title">🤖 模塑型自润滑关节轴承衬垫磨损量预测模型</div>
+    <div class="main-title">
+        🤖 模塑型自润滑关节轴承衬垫磨损量预测模型
+    </div>
     <div class="pred-desc">（该预测为在275 MPa载荷、室温环境、自润滑关节轴承摆动25000次时衬垫的磨损量）</div>
     <div class="model-metric">📊 模型性能：R² = {r2_val} | 平均绝对误差 MAE = {mae_val} μm | 均方误差 MSE = {mse_val} μm²</div>
 </div>
@@ -312,26 +391,25 @@ col_left, col_right = st.columns(2, gap="large")
 
 with col_left:
     # 1. 原始数据查询
-    st.markdown('<div class="func-card query"><div class="func-title">🔍 原始数据查询——实验实测数据</div></div>', unsafe_allow_html=True)
+    st.markdown('<div class="func-card query"><div class="func-title">🔍 原始数据查询——查询实验实测数据</div></div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
         query_content = st.selectbox("🧪 材料制备——润滑填料含量 (%)", content_options, key="query_content")
         query_size = st.selectbox("⚙️ 结构设计——轴承外圈直径 (cm)", size_options, key="query_size")
     with col2:
-        # 核心修改：下拉框显示两位小数的字符串，获取对应的数值
+        # 固化时间下拉框（显示4.00/12.00）
         query_time_item = st.selectbox(
             "⏱️ 成型工艺——固化时间 (h)",
             time_options,
-            format_func=lambda x: x[0],  # 只显示字符串部分（4.00/12.00）
+            format_func=lambda x: x[0],
             key="query_time"
         )
-        query_time_value = query_time_item[1]  # 获取对应的数值（4.0/12.0）
+        query_time_value = query_time_item[1]
         query_freq = st.selectbox("🔄 工况——测试频率 (Hz)", freq_options, key="query_freq")
 
     # 查询按钮
     if st.button("🔍 点击查询原始数据磨损量", type="primary", key="query_btn"):
-        # 使用数值进行查询匹配
         wear_result = query_wear_data(query_content, query_size, query_time_value, query_freq)
         
         if wear_result is not None:
