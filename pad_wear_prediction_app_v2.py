@@ -210,11 +210,26 @@ st.set_page_config(
 set_page_style()
 
 # ====================== 右上角显示：实时时间 + 访问人数 ======================
-now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+# ====================== 右上角显示：实时时间 + 访问人数 ======================
+# 核心修改：强制使用北京时间（UTC+8），解决时区差8小时问题
+from datetime import datetime, timedelta
+
+# 方法1：直接获取本地时间并确认时区（推荐）
+now = datetime.now()  # 获取本地时间
+# 兼容服务器时区问题：如果检测到是UTC时区，自动+8小时
+if datetime.utcnow().hour == now.hour:  # 说明当前是UTC时区
+    now = now + timedelta(hours=8)
+now_str = now.strftime("%Y-%m-%d %H:%M:%S")
+
+# 方法2（备选）：直接强制设置东八区时间（更稳妥）
+# now_utc = datetime.utcnow()
+# now_cst = now_utc + timedelta(hours=8)
+# now_str = now_cst.strftime("%Y-%m-%d %H:%M:%S")
+
 visit_num = st.session_state.visit_count
 st.markdown(f'''
 <div class="top-right-info">
-    当前时间：{now} &nbsp;&nbsp; 访问人数：{visit_num}
+    当前时间：{now_str} &nbsp;&nbsp; 访问人数：{visit_num}
 </div>
 ''', unsafe_allow_html=True)
 
