@@ -490,14 +490,10 @@ if st.session_state['show_viz_section']:
     from matplotlib.lines import Line2D
     fig1, ax1 = plt.subplots(figsize=(6.5, 4), dpi=100)
     
-    # ========== 核心：图1字体设置 ==========
-    plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'SimHei', 'WenQuanYi Zen Hei']
-    plt.rcParams['axes.unicode_minus'] = False
-    ax1.set_title(ax1.get_title(), fontproperties='Arial Unicode MS')
-    ax1.set_xlabel(ax1.get_xlabel(), fontproperties='Arial Unicode MS')
-    ax1.set_ylabel(ax1.get_ylabel(), fontproperties='Arial Unicode MS')
-    for label in ax1.get_xticklabels() + ax1.get_yticklabels():
-        label.set_fontproperties('Arial Unicode MS')
+    # 统一使用文泉驿正黑字体（开源且云端/本地都兼容）
+    font_prop = {'family':'WenQuanYi Zen Hei', 'size':9}
+    title_font = {'family':'WenQuanYi Zen Hei', 'size':12, 'weight':'bold'}
+    label_font = {'family':'WenQuanYi Zen Hei', 'size':10}
     
     colors = {35: '#FF7F0E', 40: '#14558F'}
     edge_colors = {35: '#D65F00', 40: '#14558F'}
@@ -513,9 +509,10 @@ if st.session_state['show_viz_section']:
         spine.set_linewidth(0.8)
         spine.set_color('#333333')
     
-    ax1.set_xlabel("测试频率 (Hz)", fontsize=10, labelpad=8, fontproperties='Arial Unicode MS')
-    ax1.set_ylabel("磨损量 (μm)", fontsize=10, labelpad=8, fontproperties='Arial Unicode MS')
-    ax1.set_title("1. 磨损量与测试频率关系图（点大小表示轴承外圈直径大小）", fontsize=12, fontweight="bold", pad=12, fontproperties='Arial Unicode MS')
+    # 所有中文标签统一指定文泉驿正黑
+    ax1.set_xlabel("测试频率 (Hz)", labelpad=8, **label_font)
+    ax1.set_ylabel("磨损量 (μm)", labelpad=8, **label_font)
+    ax1.set_title("1. 磨损量与测试频率关系图（点大小表示轴承外圈直径大小）", pad=12, **title_font)
     
     legend_elements = [
         Line2D([0], [0], marker='o', color='w', label='填料含量 35%',
@@ -523,11 +520,11 @@ if st.session_state['show_viz_section']:
         Line2D([0], [0], marker='o', color='w', label='填料含量 40%',
                markerfacecolor='#14558F', markeredgecolor='#14558F', markersize=8)
     ]
-    ax1.legend(handles=legend_elements, loc='upper left', fontsize=9, prop={'family':'Arial Unicode MS'})
+    ax1.legend(handles=legend_elements, loc='upper left', prop=font_prop)
     ax1.grid(alpha=0.3, linestyle='--', color='#999999', linewidth=0.6)
     ax1.set_xlim(0.1, 0.9)
     ax1.set_ylim(20, 250)
-    ax1.tick_params(axis='both', labelsize=9)
+    ax1.tick_params(axis='both', **font_prop)
     plt.tight_layout()
     st.pyplot(fig1)
     st.markdown("<p style='font-size:10px;color:#555;text-align:center;'>该图显示磨损量随测试频率升高呈上升趋势；35%填料含量的样本磨损量整体高于40%，且轴承直径越大，数据点尺寸越大，直观呈现了多变量的关联。</p>", unsafe_allow_html=True)
@@ -535,15 +532,6 @@ if st.session_state['show_viz_section']:
     
     # --- 图2：不同固化时间+轴承直径的磨损量（颜色分组调整） ---
     fig2, ax2 = plt.subplots(figsize=(6.5, 4), dpi=100)
-    
-    # ========== 核心：图2字体设置 ==========
-    plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'SimHei', 'WenQuanYi Zen Hei']
-    plt.rcParams['axes.unicode_minus'] = False
-    ax2.set_title(ax2.get_title(), fontproperties='Arial Unicode MS')
-    ax2.set_xlabel(ax2.get_xlabel(), fontproperties='Arial Unicode MS')
-    ax2.set_ylabel(ax2.get_ylabel(), fontproperties='Arial Unicode MS')
-    for label in ax2.get_xticklabels() + ax2.get_yticklabels():
-        label.set_fontproperties('Arial Unicode MS')
     
     df_viz["分组"] = df_viz["固化时间_str"] + " | " + df_viz["轴承外圈直径尺寸(cm)"].astype(str) + "cm"
     box_plot = df_viz.boxplot(
@@ -584,15 +572,16 @@ if st.session_state['show_viz_section']:
             y=median_val,
             s=f'{median_val:.1f}',
             ha='center', va='bottom',
-            fontsize=9, fontweight='bold', color='#000000',
-            fontproperties='Arial Unicode MS'
+            fontweight='bold', color='#000000',
+            **font_prop
         )
     
-    ax2.set_xlabel("固化时间 | 轴承外圈直径", fontsize=10, labelpad=8, fontproperties='Arial Unicode MS')
-    ax2.set_ylabel("磨损量 (μm)", fontsize=10, labelpad=8, fontproperties='Arial Unicode MS')
-    ax2.set_title("2. 不同固化时间与轴承直径的磨损量分布（标注中位数）", fontsize=12, fontweight="bold", pad=12, fontproperties='Arial Unicode MS')
+    # 所有中文标签统一指定文泉驿正黑
+    ax2.set_xlabel("固化时间 | 轴承外圈直径", labelpad=8, **label_font)
+    ax2.set_ylabel("磨损量 (μm)", labelpad=8, **label_font)
+    ax2.set_title("2. 不同固化时间与轴承直径的磨损量分布（标注中位数）", pad=12, **title_font)
     ax2.grid(alpha=0.3, linestyle='--', color='#999999', linewidth=0.6)
-    ax2.tick_params(axis='both', labelsize=8)
+    ax2.tick_params(axis='both', labelsize=8, **font_prop)
     plt.suptitle('')
     plt.tight_layout()
     st.pyplot(fig2)
@@ -602,15 +591,6 @@ if st.session_state['show_viz_section']:
     # --- 图3：预测值 vs 实测值 ---
     fig3, ax3 = plt.subplots(figsize=(6.5, 3.5), dpi=100)
     
-    # ========== 核心：图3字体设置 ==========
-    plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'SimHei', 'WenQuanYi Zen Hei']
-    plt.rcParams['axes.unicode_minus'] = False
-    ax3.set_title(ax3.get_title(), fontproperties='Arial Unicode MS')
-    ax3.set_xlabel(ax3.get_xlabel(), fontproperties='Arial Unicode MS')
-    ax3.set_ylabel(ax3.get_ylabel(), fontproperties='Arial Unicode MS')
-    for label in ax3.get_xticklabels() + ax3.get_yticklabels():
-        label.set_fontproperties('Arial Unicode MS')
-    
     for spine in ax3.spines.values():
         spine.set_linewidth(0.8)
         spine.set_color('#333333')
@@ -619,12 +599,13 @@ if st.session_state['show_viz_section']:
     ax3.plot(df_plot["index"], df_plot["磨损量(um)"], color='#FF4B5C', linewidth=2.0, marker='o', markersize=4, label='实测值')
     ax3.plot(df_plot["index"], df_plot["预测磨损量"], color='#1E90FF', linewidth=2.0, linestyle='--', marker='s', markersize=4, label='预测值')
     
-    ax3.set_xlabel("样本序号", fontsize=10, labelpad=8, fontproperties='Arial Unicode MS')
-    ax3.set_ylabel("磨损量 (μm)", fontsize=10, labelpad=8, fontproperties='Arial Unicode MS')
-    ax3.set_title("3. 磨损量实测值与模型预测值对比", fontsize=12, fontweight="bold", pad=12, fontproperties='Arial Unicode MS')
-    ax3.legend(fontsize=9, prop={'family':'Arial Unicode MS'})
+    # 所有中文标签统一指定文泉驿正黑
+    ax3.set_xlabel("样本序号", labelpad=8, **label_font)
+    ax3.set_ylabel("磨损量 (μm)", labelpad=8, **label_font)
+    ax3.set_title("3. 磨损量实测值与模型预测值对比", pad=12, **title_font)
+    ax3.legend(fontsize=9, prop=font_prop)
     ax3.grid(alpha=0.3, linestyle='--', color='#999999', linewidth=0.6)
-    ax3.tick_params(axis='both', labelsize=9)
+    ax3.tick_params(axis='both', **font_prop)
     plt.tight_layout()
     st.pyplot(fig3)
     st.markdown("<p style='font-size:10px;color:#555;text-align:center;'>模型预测值与实测值的折线趋势高度一致，表明该模型能较好地拟合磨损量数据，可用于后续磨损量的预测分析。</p>", unsafe_allow_html=True)
@@ -633,15 +614,6 @@ if st.session_state['show_viz_section']:
     # --- 图4：特征重要性 ---
     st.markdown("### 🧠 特征重要性分析")
     fig4, ax4 = plt.subplots(figsize=(6.5, 3.5), dpi=100)
-    
-    # ========== 核心：图4字体设置 ==========
-    plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'SimHei', 'WenQuanYi Zen Hei']
-    plt.rcParams['axes.unicode_minus'] = False
-    ax4.set_title(ax4.get_title(), fontproperties='Arial Unicode MS')
-    ax4.set_xlabel(ax4.get_xlabel(), fontproperties='Arial Unicode MS')
-    ax4.set_ylabel(ax4.get_ylabel(), fontproperties='Arial Unicode MS')
-    for label in ax4.get_xticklabels() + ax4.get_yticklabels():
-        label.set_fontproperties('Arial Unicode MS')
     
     for spine in ax4.spines.values():
         spine.set_linewidth(0.8)
@@ -691,18 +663,17 @@ if st.session_state['show_viz_section']:
             height + 0.002,
             f'{height:.3f}',
             ha='center', va='bottom',
-            fontsize=9, fontweight='bold',
-            color='#000000',
-            fontproperties='Arial Unicode MS',
-            zorder=3
+            fontweight='bold', color='#000000',
+            **font_prop
         )
     
-    ax4.set_ylabel("特征重要性", fontsize=10, labelpad=8, fontproperties='Arial Unicode MS')
-    ax4.set_title("4. 各参数对磨损量的影响程度排序", fontsize=12, fontweight="bold", pad=12, fontproperties='Arial Unicode MS')
+    # 所有中文标签统一指定文泉驿正黑
+    ax4.set_ylabel("特征重要性", labelpad=8, **label_font)
+    ax4.set_title("4. 各参数对磨损量的影响程度排序", pad=12, **title_font)
     ax4.set_xticks(x_pos)
-    ax4.set_xticklabels(sorted_features, rotation=15, ha='right', fontsize=8, fontproperties='Arial Unicode MS')
+    ax4.set_xticklabels(sorted_features, rotation=15, ha='right', fontsize=8, **font_prop)
     ax4.grid(axis='y', alpha=0.3, linestyle='--', color='#999999', linewidth=0.6)
-    ax4.tick_params(axis='y', labelsize=9)
+    ax4.tick_params(axis='y', **font_prop)
     plt.tight_layout()
     st.pyplot(fig4)
     st.markdown("<p style='font-size:10px;color:#555;text-align:center;'>该图按重要性排序展示了各参数对磨损量的影响，数值标签清晰呈现具体重要性得分，可明确后续优化的核心参数方向。</p>", unsafe_allow_html=True)
