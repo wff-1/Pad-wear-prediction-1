@@ -9,12 +9,6 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import LeaveOneOut
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 
-# 静态可视化库导入
-import matplotlib.pyplot as plt
-# 替换原来的字体设置，优先使用服务器自带的无衬线字体
-plt.rcParams['font.sans-serif'] = ['WenQuanYi Zen Hei', 'SimHei', 'DejaVu Sans', 'Arial Unicode MS']
-plt.rcParams['axes.unicode_minus'] = False  # 保留负号显示
-
 # 强制设置Python编码（解决本地中文乱码核心）
 sys.stdout.reconfigure(encoding='utf-8')
 sys.stderr.reconfigure(encoding='utf-8')
@@ -25,7 +19,7 @@ if 'visit_count' not in st.session_state:
 else:
     st.session_state.visit_count += 1
 
-# ====================== 样式设置（响应式适配 + 无乱码） ======================
+# ====================== 样式设置（新增响应式适配） ======================
 def set_page_style():
     st.markdown(
         '''
@@ -292,7 +286,7 @@ def set_page_style():
         unsafe_allow_html=True
     )
 
-# ====================== 页面配置 ======================
+# ====================== 页面配置（替换为科幻轴承图标） ======================
 st.set_page_config(
     page_title="模塑型自润滑关节轴承衬垫磨损量预测",
     page_icon="🤖",
@@ -301,16 +295,18 @@ st.set_page_config(
 )
 set_page_style()
 
-# ====================== 右上角实时时间 + 访问人数 ======================
-now = datetime.now()
-if datetime.utcnow().hour == now.hour:
+# ====================== 右上角显示：实时时间 + 访问人数（修复时区） ======================
+# 核心修改：强制使用北京时间（UTC+8），解决时区差8小时问题
+now = datetime.now()  # 获取本地时间
+# 兼容服务器时区问题：如果检测到是UTC时区，自动+8小时
+if datetime.utcnow().hour == now.hour:  # 说明当前是UTC时区
     now = now + timedelta(hours=8)
 now_str = now.strftime("%Y-%m-%d %H:%M:%S")
 
 visit_num = st.session_state.visit_count
 st.markdown(f'''
 <div class="top-right-info">
-    当前时间：{now_str} &nbsp;&nbsp; 累计访问人数：{visit_num}
+    当前时间：{now_str} &nbsp;&nbsp; 访问人数：{visit_num}
 </div>
 ''', unsafe_allow_html=True)
 
@@ -328,9 +324,10 @@ def load_original_data():
 
 original_df = load_original_data()
 
-# ====================== 提取查询用参数 ======================
+# ====================== 提取原始数据唯一值（查询用） ======================
 content_options = sorted(original_df["润滑填料含量(%)"].unique())
 size_options = sorted(original_df["轴承外圈直径尺寸(cm)"].unique())
+# 固化时间显示两位小数
 time_options = [("4.00", 4.0), ("12.00", 12.0)]
 freq_options = sorted(original_df["测试频率(Hz)"].unique())
 
@@ -374,8 +371,8 @@ def query_wear_data(query_content, query_size, query_time, query_freq):
     else:
         return None
 
-# ====================== 主页面交互 ======================
-# 头部卡片
+# ====================== 页面交互（标题嵌入科幻轴承图标） ======================
+# 头部卡片（已美化 + 标题嵌入轴承图标）
 st.markdown('''
 <div class="header-card">
     <div class="main-title">
@@ -386,19 +383,22 @@ st.markdown('''
 </div>
 '''.format(r2_val=r2_val, mae_val=mae_val, mse_val=mse_val), unsafe_allow_html=True)
 
+# 渐变分隔线
 st.markdown('<hr class="gradient-divider">', unsafe_allow_html=True)
 
-# 双列布局：查询 + 预测
+# 双列并排布局
 col_left, col_right = st.columns(2, gap="large")
 
 with col_left:
+    # 1. 原始数据查询
     st.markdown('<div class="func-card query"><div class="func-title">🔍 原始数据查询——查询实测数据</div></div>', unsafe_allow_html=True)
-    
+
     col1, col2 = st.columns(2)
     with col1:
         query_content = st.selectbox("🧪 材料制备——润滑填料含量 (%)", content_options, key="query_content")
         query_size = st.selectbox("⚙️ 结构设计——轴承外圈直径 (cm)", size_options, key="query_size")
     with col2:
+        # 固化时间下拉框（显示4.00/12.00）
         query_time_item = st.selectbox(
             "⏱️ 成型工艺——固化时间 (h)",
             time_options,
@@ -407,9 +407,11 @@ with col_left:
         )
         query_time_value = query_time_item[1]
         query_freq = st.selectbox("🔄 测试工况——测试频率 (Hz)", freq_options, key="query_freq")
-    
+
+    # 查询按钮
     if st.button("🔍 点击查询原始数据磨损量", type="primary", key="query_btn"):
         wear_result = query_wear_data(query_content, query_size, query_time_value, query_freq)
+        
         if wear_result is not None:
             st.success("✅ 数据查询成功！")
             st.markdown(f'<div class="query-result-label">🔍 原始实验数据磨损量</div>', unsafe_allow_html=True)
@@ -419,8 +421,9 @@ with col_left:
             st.warning("⚠️ 未查询到匹配的原始实验数据！")
 
 with col_right:
+    # 2. 模型预测 - 保持原样
     st.markdown('<div class="func-card"><div class="func-title">📈 模型预测——预测衬垫磨损量</div></div>', unsafe_allow_html=True)
-    
+
     col3, col4 = st.columns(2)
     with col3:
         lubricant_content = st.selectbox("🧪 材料制备——润滑填料含量 (%)", [35, 40], key="pred_content")
@@ -428,257 +431,20 @@ with col_right:
     with col4:
         molding_time = st.number_input("⏱️ 成型工艺——固化时间 (h)", value=12.0, step=1.0, key="pred_time")
         working_frequency = st.number_input("🔄 测试工况——测试频率 (Hz)", value=0.5, step=0.01, key="pred_freq")
-    
+
+    # 预测按钮
     if st.button("🚀 点击预测磨损量", type="primary", key="pred_btn"):
         input_features = np.array([[lubricant_content, structure_size, molding_time, working_frequency]])
         predicted_wear = model.predict(input_features)[0]
         predicted_wear = round(predicted_wear, 2)
         st.success("✅ 预测完成！")
+        
         st.markdown(f'<div class="pred-result-label">📈 衬垫磨损量预测值</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="pred-result-value">{predicted_wear} μm</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="pred-result-delta">参考误差 ±{mae_val} μm</div>', unsafe_allow_html=True)
 
-# ====================== 数据可视化模块（按钮控制显示/隐藏） ======================
-# 初始化状态：默认不显示
-if 'show_viz_section' not in st.session_state:
-    st.session_state['show_viz_section'] = False
-
-# 切换按钮
-st.markdown('<hr class="gradient-divider">', unsafe_allow_html=True)
-if st.button(
-    "📊 数据可视化分析（点击展开/收起）",
-    type="secondary",
-    use_container_width=True
-):
-    st.session_state['show_viz_section'] = not st.session_state['show_viz_section']
-
-# 显示可视化内容
-if st.session_state['show_viz_section']:
-    st.markdown('<div class="func-card"><div class="func-title">📊 静态数据可视化分析</div></div>', unsafe_allow_html=True)
-    
-    # 模型与网站介绍 - 修改后的样式
-    st.markdown("""
-   <div style="background: linear-gradient(135deg, #F8F4E9 0%, #F0E6D2 100%); 
-            padding: 7px 12px; 
-            border-radius: 6px; /* 复古小圆角，替代现代大圆角 */
-            margin-bottom: 10px; 
-            border-left: 3px solid #B85450; /* 复古砖红色侧边线，替代亮红 */
-            border: 1px solid #D9C7A7; /* 复古米色边框 */
-            box-shadow: 0 2px 6px rgba(150, 120, 80, 0.12); /* 暖调复古阴影 */
-            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjRjhGNEU5Ii8+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNlOGU0ZGQiLz4KPC9zdmc+'); /* 复古纸张纹理 */
-            background-size: 15px 15px;">
-    <p style="font-size: 11px; 
-              color: #5A4A38; /* 复古深棕文字，替代纯黑 */
-              line-height: 1.4; 
-              font-weight: normal; 
-              margin: 0;
-              font-family: 'SimSun', 'Microsoft YaHei', serif; /* 宋体+微软雅黑，增强复古感 */
-              letter-spacing: 0.3px; /* 轻微字间距，复古排版特征 */">
-        模型说明：本网站搭载的随机森林预测模型，核心基于聚酰胺酸酯树脂基自润滑关节轴承衬垫的实验数据训练而成。
-        <br>重要提示：材料配方中树脂的化学结构是衬垫磨损性能的决定性因素，若将本模型应用于其他种类树脂材料的磨损量预测，结果可能存在显著偏差，请谨慎使用。
-    </p>
-</div>
-    """, unsafe_allow_html=True)
-    
-    # 准备数据
-    df_viz = load_original_data()
-    df_viz["固化时间_str"] = df_viz["固化时间(h)"].apply(lambda x: f"{x}.00 h")
-    X_all = df_viz[["润滑填料含量(%)", "轴承外圈直径尺寸(cm)", "固化时间(h)", "测试频率(Hz)"]]
-    df_viz["预测磨损量"] = model.predict(X_all)
-    
-    # --- 图1：磨损量 vs 测试频率 ---
-    from matplotlib.lines import Line2D
-    fig1, ax1 = plt.subplots(figsize=(6.5, 4), dpi=100)
-    
-    # 统一使用文泉驿正黑字体（开源且云端/本地都兼容）
-    font_prop = {'family':'WenQuanYi Zen Hei', 'size':9}
-    title_font = {'family':'WenQuanYi Zen Hei', 'size':12, 'weight':'bold'}
-    label_font = {'family':'WenQuanYi Zen Hei', 'size':10}
-    
-    colors = {35: '#FF7F0E', 40: '#14558F'}
-    edge_colors = {35: '#D65F00', 40: '#14558F'}
-    
-    for content in df_viz["润滑填料含量(%)"].unique():
-        df_sub = df_viz[df_viz["润滑填料含量(%)"] == content]
-        point_size = (df_sub["轴承外圈直径尺寸(cm)"] - 20) * 25
-        for x, y, s in zip(df_sub["测试频率(Hz)"], df_sub["磨损量(um)"], point_size):
-            ax1.scatter(x + 0.002, y - 0.8, s=s, color=edge_colors[content], alpha=0.3, zorder=1)
-            ax1.scatter(x, y, s=s, color=colors[content], edgecolor=edge_colors[content], linewidth=1.2, alpha=0.9, zorder=2)
-    
-    for spine in ax1.spines.values():
-        spine.set_linewidth(0.8)
-        spine.set_color('#333333')
-    
-    # 所有中文标签统一指定文泉驿正黑
-    ax1.set_xlabel("测试频率 (Hz)", labelpad=8, **label_font)
-    ax1.set_ylabel("磨损量 (μm)", labelpad=8, **label_font)
-    ax1.set_title("1. 磨损量与测试频率关系图（点大小表示轴承外圈直径大小）", pad=12, **title_font)
-    
-    legend_elements = [
-        Line2D([0], [0], marker='o', color='w', label='填料含量 35%',
-               markerfacecolor='#FF7F0E', markeredgecolor='#D65F00', markersize=8),
-        Line2D([0], [0], marker='o', color='w', label='填料含量 40%',
-               markerfacecolor='#14558F', markeredgecolor='#14558F', markersize=8)
-    ]
-    ax1.legend(handles=legend_elements, loc='upper left', prop=font_prop)
-    ax1.grid(alpha=0.3, linestyle='--', color='#999999', linewidth=0.6)
-    ax1.set_xlim(0.1, 0.9)
-    ax1.set_ylim(20, 250)
-    ax1.tick_params(axis='both', **font_prop)
-    plt.tight_layout()
-    st.pyplot(fig1)
-    st.markdown("<p style='font-size:10px;color:#555;text-align:center;'>该图显示磨损量随测试频率升高呈上升趋势；35%填料含量的样本磨损量整体高于40%，且轴承直径越大，数据点尺寸越大，直观呈现了多变量的关联。</p>", unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # --- 图2：不同固化时间+轴承直径的磨损量（颜色分组调整） ---
-    fig2, ax2 = plt.subplots(figsize=(6.5, 4), dpi=100)
-    
-    df_viz["分组"] = df_viz["固化时间_str"] + " | " + df_viz["轴承外圈直径尺寸(cm)"].astype(str) + "cm"
-    box_plot = df_viz.boxplot(
-        column="磨损量(um)",
-        by="分组",
-        ax=ax2,
-        patch_artist=True,
-        return_type='dict',
-        medianprops={'color': '#2ca02c', 'linewidth': 1.8},  # 默认绿色
-        whiskerprops={'color': '#1f77b4', 'linewidth': 1.0},
-        capprops={'color': '#1f77b4', 'linewidth': 1.0},
-        flierprops={'marker': 'o', 'markerfacecolor': '#FF6B6B', 'markeredgecolor': '#333', 'markersize': 4}
-    )
-    
-    # 前两个中位数线设为过渡色（钢蓝色 #4682B4）
-    median_lines = box_plot['磨损量(um)']['medians']
-    if len(median_lines) >= 2:
-        median_lines[0].set_color('#4682B4')  # 第一个中位数线
-        median_lines[1].set_color('#4682B4')  # 第二个中位数线
-    
-    for spine in ax2.spines.values():
-        spine.set_linewidth(0.8)
-        spine.set_color('#333333')
-    
-    # 核心修改：第1、2个箱体为浅蓝 #87CEEB；第3、4个箱体为浅绿 #90EE90
-    fill_colors = ['#87CEEB', '#87CEEB', '#90EE90', '#90EE90']
-    for i, box in enumerate(box_plot['磨损量(um)']['boxes']):
-        box.set_facecolor(fill_colors[i % len(fill_colors)])
-        box.set_edgecolor('#333333')
-        box.set_linewidth(0.8)
-    
-    group_names = df_viz["分组"].unique()
-    medians = df_viz.groupby("分组")["磨损量(um)"].median()
-    for i, group in enumerate(group_names):
-        median_val = medians[group]
-        ax2.text(
-            x=i+1,
-            y=median_val,
-            s=f'{median_val:.1f}',
-            ha='center', va='bottom',
-            fontweight='bold', color='#000000',
-            **font_prop
-        )
-    
-    # 所有中文标签统一指定文泉驿正黑
-    ax2.set_xlabel("固化时间 | 轴承外圈直径", labelpad=8, **label_font)
-    ax2.set_ylabel("磨损量 (μm)", labelpad=8, **label_font)
-    ax2.set_title("2. 不同固化时间与轴承直径的磨损量分布（标注中位数）", pad=12, **title_font)
-    ax2.grid(alpha=0.3, linestyle='--', color='#999999', linewidth=0.6)
-    ax2.tick_params(axis='both', labelsize=8, **font_prop)
-    plt.suptitle('')
-    plt.tight_layout()
-    st.pyplot(fig2)
-    st.markdown("<p style='font-size:10px;color:#555;text-align:center;'>箱线图清晰展示了不同分组的磨损量分布与中位数水平；固化时间和轴承直径的组合显著影响磨损量，中位数标签可快速对比各组数据的集中趋势。</p>", unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # --- 图3：预测值 vs 实测值 ---
-    fig3, ax3 = plt.subplots(figsize=(6.5, 3.5), dpi=100)
-    
-    for spine in ax3.spines.values():
-        spine.set_linewidth(0.8)
-        spine.set_color('#333333')
-    
-    df_plot = df_viz.reset_index()
-    ax3.plot(df_plot["index"], df_plot["磨损量(um)"], color='#FF4B5C', linewidth=2.0, marker='o', markersize=4, label='实测值')
-    ax3.plot(df_plot["index"], df_plot["预测磨损量"], color='#1E90FF', linewidth=2.0, linestyle='--', marker='s', markersize=4, label='预测值')
-    
-    # 所有中文标签统一指定文泉驿正黑
-    ax3.set_xlabel("样本序号", labelpad=8, **label_font)
-    ax3.set_ylabel("磨损量 (μm)", labelpad=8, **label_font)
-    ax3.set_title("3. 磨损量实测值与模型预测值对比", pad=12, **title_font)
-    ax3.legend(fontsize=9, prop=font_prop)
-    ax3.grid(alpha=0.3, linestyle='--', color='#999999', linewidth=0.6)
-    ax3.tick_params(axis='both', **font_prop)
-    plt.tight_layout()
-    st.pyplot(fig3)
-    st.markdown("<p style='font-size:10px;color:#555;text-align:center;'>模型预测值与实测值的折线趋势高度一致，表明该模型能较好地拟合磨损量数据，可用于后续磨损量的预测分析。</p>", unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # --- 图4：特征重要性 ---
-    st.markdown("### 🧠 特征重要性分析")
-    fig4, ax4 = plt.subplots(figsize=(6.5, 3.5), dpi=100)
-    
-    for spine in ax4.spines.values():
-        spine.set_linewidth(0.8)
-        spine.set_color('#333333')
-    
-    feature_names = ["润滑填料含量(%)", "轴承外圈直径(cm)", "固化时间(h)", "测试频率(Hz)"]
-    importances = model.feature_importances_
-    sorted_idx = importances.argsort()[::-1]
-    sorted_features = [feature_names[i] for i in sorted_idx]
-    sorted_importances = importances[sorted_idx]
-    
-    import matplotlib.colors as mcolors
-    cmap = mcolors.LinearSegmentedColormap.from_list('custom_gradient', ['#64B5F6', '#1565C0'])
-    colors_gradient = [cmap(i/len(sorted_importances)) for i in range(len(sorted_importances))]
-    edge_colors = ['#0D47A1' for _ in range(len(sorted_importances))]
-    
-    bar_width = 0.6
-    x_pos = range(len(sorted_features))
-    
-    ax4.bar(
-        [x + 0.015 for x in x_pos],
-        [h - 0.004 for h in sorted_importances],
-        width=bar_width,
-        color='#0A2E70',
-        alpha=0.3,
-        zorder=1
-    )
-    
-    bars = ax4.bar(
-        x_pos,
-        sorted_importances,
-        width=bar_width,
-        color=colors_gradient,
-        edgecolor=edge_colors,
-        linewidth=1.2,
-        alpha=0.9,
-        zorder=2
-    )
-    
-    y_max = max(sorted_importances) * 1.15
-    ax4.set_ylim(0, y_max)
-    
-    for i, bar in enumerate(bars):
-        height = bar.get_height()
-        ax4.text(
-            bar.get_x() + bar.get_width()/2.,
-            height + 0.002,
-            f'{height:.3f}',
-            ha='center', va='bottom',
-            fontweight='bold', color='#000000',
-            **font_prop
-        )
-    
-    # 所有中文标签统一指定文泉驿正黑
-    ax4.set_ylabel("特征重要性", labelpad=8, **label_font)
-    ax4.set_title("4. 各参数对磨损量的影响程度排序", pad=12, **title_font)
-    ax4.set_xticks(x_pos)
-    ax4.set_xticklabels(sorted_features, rotation=15, ha='right', fontsize=8, **font_prop)
-    ax4.grid(axis='y', alpha=0.3, linestyle='--', color='#999999', linewidth=0.6)
-    ax4.tick_params(axis='y', **font_prop)
-    plt.tight_layout()
-    st.pyplot(fig4)
-    st.markdown("<p style='font-size:10px;color:#555;text-align:center;'>该图按重要性排序展示了各参数对磨损量的影响，数值标签清晰呈现具体重要性得分，可明确后续优化的核心参数方向。</p>", unsafe_allow_html=True)
 # 底部备注 - 与卡片间距设为15px
 st.markdown('<div class="bottom-note">', unsafe_allow_html=True)
 st.divider()
 st.caption("⚠️ 原始数据查询结果为实验室实测值；模型预测结果仅供科研与工程参考。")
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True) 豆包这是我的最终版代码，刚才从streamlit 能打开网址，后面手机和电脑也都能打开并且显示良好。
