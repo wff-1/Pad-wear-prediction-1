@@ -11,8 +11,9 @@ from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 
 # 静态可视化库导入
 import matplotlib.pyplot as plt
-plt.rcParams['font.sans-serif'] = ['Microsoft YaHei']  # 解决中文显示问题
-plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+# 替换原来的字体设置，优先使用服务器自带的无衬线字体
+plt.rcParams['font.sans-serif'] = ['WenQuanYi Zen Hei', 'SimHei', 'DejaVu Sans', 'Arial Unicode MS']
+plt.rcParams['axes.unicode_minus'] = False  # 保留负号显示
 
 # 强制设置Python编码（解决本地中文乱码核心）
 sys.stdout.reconfigure(encoding='utf-8')
