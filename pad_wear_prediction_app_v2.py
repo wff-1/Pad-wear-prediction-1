@@ -447,4 +447,4 @@ with col_right:
 st.markdown('<div class="bottom-note">', unsafe_allow_html=True)
 st.divider()
 st.caption("⚠️ 原始数据查询结果为实验室实测值；模型预测结果仅供科研与工程参考。")
-st.markdown('</div>', unsafe_allow_html=True) 豆包这是我的最终版代码，刚才从streamlit 能打开网址，后面手机和电脑也都能打开并且显示良好。
+st.markdown('</div>', unsafe_allow_html=True) 
